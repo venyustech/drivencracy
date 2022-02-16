@@ -25,3 +25,15 @@ export async function postPool(req, res) {
         res.status(500).send(error);
     }
 }
+
+export async function getPool(req, res) {
+
+    try {
+        const user = await db.collection("pool").find({}).toArray(function (err, results) {
+            res.send(results);
+        });
+
+    } catch (error) {
+        res.status(500).send(error);
+    }
+}

@@ -1,9 +1,11 @@
 import { Router } from "express";
-import { postPool } from "../controlles/authController.js";
+import { getPool, postPool } from "../controlles/authController.js";
 
 const authRouter = Router();
 
 authRouter.post("/pool", postPool);
+authRouter.get("/pool", getPool);
+
 
 
 export default authRouter; 
