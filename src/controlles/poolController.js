@@ -8,18 +8,37 @@ const postPoolSchema = joi.object({
 
 
 export async function postPool(req, res) {
+    const { title, expireAt } = req.body;
+    let id = 0;
     const validation = postPoolSchema.validate(req.body, { abortEarly: false });
+
     if (validation.error) {
         const errors = validation.error.details.map((detail) => detail.message);
         return res.status(422).send(errors);
     }
+
+    db.collection("pool").find({}).toArray(function (err, results) {
+        if (results != 0) {
+            id = results.length;
+        }
+    });
+
+
     try {
         const pool = await db.collection("pool").findOne({ title });
         if (!pool) {
             await db
                 .collection("pool")
-                .insertOne({ title: postPool.title, expireAt: postPool.expireAt });
-            res.status(201).send({ title: postPool.title, expireAt: postPool.expireAt });
+                .insertOne({
+                    id: id,
+                    title: title,
+                    expireAt: expireAt
+                });
+            res.status(201).send({
+                id: id,
+                title: title,
+                expireAt: expireAt
+            });
         } else res.status(401).send("pergunta ja existente");
     } catch (error) {
         res.status(500).send(error);
@@ -29,11 +48,13 @@ export async function postPool(req, res) {
 export async function getPool(req, res) {
 
     try {
-        const user = await db.collection("pool").find({}).toArray(function (err, results) {
+        db.collection("pool").find({}).toArray(function (err, results) {
             res.send(results);
+            console.log(results.length);
         });
 
     } catch (error) {
         res.status(500).send(error);
     }
 }
+

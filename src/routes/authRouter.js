@@ -1,10 +1,14 @@
 import { Router } from "express";
-import { getPool, postPool } from "../controlles/authController.js";
+import { postChoice } from "../controlles/choiceControllers.js";
+import { getPool, postPool } from "../controlles/poolController.js";
 
 const authRouter = Router();
 
 authRouter.post("/pool", postPool);
 authRouter.get("/pool", getPool);
+authRouter.post("/choice", postChoice);
+
+
 
 
 
