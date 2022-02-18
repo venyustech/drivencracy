@@ -11,7 +11,7 @@ export async function postVoteById(req, res) {
         if (choice) {
             await db.collection("vote").insertOne({
                 createdAt: todayDate,
-                choiceId: req.params.id,
+                choiceId: parseInt(req.params.id),
             });
             res.status(201).send("OK");
         } else res.status(404).send("escolha não existente");
