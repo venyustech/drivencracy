@@ -49,3 +49,18 @@ export async function postChoice(req, res) {
         res.status(500).send(error);
     }
 }
+
+export async function getChoicesById(req, res) {
+
+    try {
+        const pool = await db.collection("pool").findOne({ id: parseInt(req.params.id) });
+        if (pool) {
+            await db.collection("choices").find({ poolId: req.params.id }).toArray(function (err, results) {
+                res.send(results);
+            });
+        } else res.status(404).send("enquete nao existe");
+
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+}

@@ -1,9 +1,10 @@
 import joi from "joi";
 import db from "../db.js";
+import dayjs from "dayjs";
 
 const postPoolSchema = joi.object({
     title: joi.string().min(1).trim().required(),
-    expireAt: joi.string().required(),
+    expireAt: joi.string().required().allow(""),
 });
 
 
@@ -23,10 +24,24 @@ export async function postPool(req, res) {
         }
     });
 
-
     try {
         const pool = await db.collection("pool").findOne({ title });
-        if (!pool) {
+        if (expireAt === "" && !pool) {
+            let expireAtChange = dayjs().add(30, 'day').format('YYYY-MM-DD HH:mm')
+            await db
+                .collection("pool")
+                .insertOne({
+                    id: id,
+                    title: title,
+                    expireAt: expireAtChange
+                });
+            res.status(201).send({
+                id: id,
+                title: title,
+                expireAt: expireAtChange
+            });
+        }
+        else if (!pool) {
             await db
                 .collection("pool")
                 .insertOne({
