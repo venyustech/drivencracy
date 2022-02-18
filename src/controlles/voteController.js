@@ -1,21 +1,25 @@
-import joi from "joi";
 import db from "../db.js";
 import dayjs from "dayjs";
+import { ObjectId } from "mongodb";
 
 export async function postVoteById(req, res) {
+    const index = req.params.id;
+    let todayDate = dayjs().format('YYYY-MM-DD HH:mm');
 
     try {
-        let todayDate = dayjs().format('YYYY-MM-DD HH:mm');
-        const choice = await db.collection("choices").findOne({ id: parseInt(req.params.id) });
-
-        if (choice) {
+        const choice = await db.collection("choices").findOne({ _id: new ObjectId(index) });
+        if (!choice)
+            res.status(404).send("escolha não existente");
+        else {
             await db.collection("vote").insertOne({
                 createdAt: todayDate,
-                choiceId: parseInt(req.params.id),
+                choiceId: index,
             });
             res.status(201).send("OK");
-        } else res.status(404).send("escolha não existente");
-    } catch (error) {
+        }
+
+    }
+    catch (error) {
         console.log(error.message)
         res.status(500).send(error.message);
     }

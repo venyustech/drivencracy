@@ -1,32 +1,32 @@
+import { ObjectId } from "mongodb";
 import db from "../db.js";
 
 export async function getResultById(req, res) {
     const poolId = req.params.id;
     let biggerVotes = 0;
-    let choiceId = 0;
+    let choiceElement = 0;
     try {
-        const pool = await db.collection("pool").findOne({ id: parseInt(poolId) });
-        if (!pool)
+        const isTherePool = await db.collection("pool").findOne({ _id: new ObjectId(poolId) });
+        if (!isTherePool)
             res.status(404).send("enquete nao existe");
 
         const choices = await db.collection("choices").find({ poolId: poolId }).toArray();
-        for (let choiceIndex in choices) {
-            const votes = await db.collection("vote").find({ choiceId: choices[choiceIndex].id }).toArray();
+
+        for (let element in choices) {
+            const votes = await db.collection("vote").find({ choiceId: choices[element]._id.toString() }).toArray();
             if (votes.length > biggerVotes) {
                 biggerVotes = votes.length
-                choiceId = votes[0].choiceId
-
-                const isLastIteration = parseInt(choiceIndex) === choices.length - 1;
-                if (isLastIteration) {
-                    res.send({
-                        ...pool,
-                        result: {
-                            title: choices[choiceId].title,
-                            votes: biggerVotes
-                        }
-                    })
-                }
+                choiceElement = element;
             }
+            const isLastIteration = parseInt(element) === choices.length - 1;
+            if (isLastIteration)
+                res.send({
+                    ...isTherePool,
+                    result: {
+                        title: choices[choiceElement].title,
+                        votes: biggerVotes
+                    }
+                })
         }
     } catch (error) {
         res.status(500).send(error.message);
