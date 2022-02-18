@@ -10,7 +10,7 @@ const postPoolSchema = joi.object({
 
 export async function postPool(req, res) {
     const { title, expireAt } = req.body;
-    let id = 0;
+    let expireAtChange = expireAt;
     const validation = postPoolSchema.validate(req.body, { abortEarly: false });
 
     if (validation.error) {
@@ -18,43 +18,24 @@ export async function postPool(req, res) {
         return res.status(422).send(errors);
     }
 
-    db.collection("pool").find({}).toArray(function (err, results) {
-        if (results != 0) {
-            id = results.length;
-        }
-    });
-
     try {
         const pool = await db.collection("pool").findOne({ title });
-        if (expireAt === "" && !pool) {
-            let expireAtChange = dayjs().add(30, 'day').format('YYYY-MM-DD HH:mm')
-            await db
-                .collection("pool")
-                .insertOne({
-                    id: id,
-                    title: title,
-                    expireAt: expireAtChange
-                });
-            res.status(201).send({
-                id: id,
+        if (pool)
+            res.status(401).send("pergunta ja existente");
+        if (expireAt === "") {
+            expireAtChange = dayjs().add(30, 'day').format('YYYY-MM-DD HH:mm')
+        }
+        await db
+            .collection("pool")
+            .insertOne({
                 title: title,
                 expireAt: expireAtChange
             });
-        }
-        else if (!pool) {
-            await db
-                .collection("pool")
-                .insertOne({
-                    id: id,
-                    title: title,
-                    expireAt: expireAt
-                });
-            res.status(201).send({
-                id: id,
-                title: title,
-                expireAt: expireAt
-            });
-        } else res.status(401).send("pergunta ja existente");
+        res.status(201).send({
+            title: title,
+            expireAt: expireAtChange
+        });
+
     } catch (error) {
         res.status(500).send(error);
     }
@@ -65,7 +46,6 @@ export async function getPool(req, res) {
     try {
         db.collection("pool").find({}).toArray(function (err, results) {
             res.send(results);
-            console.log(results.length);
         });
 
     } catch (error) {
