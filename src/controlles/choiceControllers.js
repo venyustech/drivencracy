@@ -1,6 +1,7 @@
 import joi from "joi";
 import { ObjectId } from "mongodb";
 import db from "../db.js";
+import dayjs from "dayjs";
 
 
 const postChoiceSchema = joi.object({
@@ -18,12 +19,16 @@ export async function postChoice(req, res) {
 
     try {
         const isTherePool = await db.collection("pool").findOne({ _id: new ObjectId(poolId) });
-        if (!isTherePool)
-            res.status(404).send("esse id questionário não existe");
+        const hasPoolExpired = dayjs(isTherePool.expireAt).isBefore(dayjs());
 
         const isThereChoice = await db.collection("choices").findOne({ title });
-        if (isThereChoice)
-            res.status(409).send("essa pergunta ja existe");
+
+        if (!isTherePool)
+            res.status(404).send("esse id questionário não existe");
+        else if (isThereChoice)
+            res.status(409).send("essa pergunta já existe");
+        else if (hasPoolExpired)
+            res.status(403).send("essa pergunta já expirou");
         else {
             await db
                 .collection("choices")
@@ -35,7 +40,6 @@ export async function postChoice(req, res) {
                 title: title,
                 poolId: poolId
             });
-
         }
 
     } catch (error) {
