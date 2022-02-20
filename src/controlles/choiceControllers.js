@@ -19,28 +19,28 @@ export async function postChoice(req, res) {
 
     try {
         const isTherePool = await db.collection("pool").findOne({ _id: new ObjectId(poolId) });
-        const hasPoolExpired = dayjs(isTherePool.expireAt).isBefore(dayjs());
-
         const isThereChoice = await db.collection("choices").findOne({ title });
 
         if (!isTherePool)
-            res.status(404).send("esse id questionário não existe");
-        else if (isThereChoice)
-            res.status(409).send("essa pergunta já existe");
-        else if (hasPoolExpired)
-            res.status(403).send("essa pergunta já expirou");
-        else {
-            await db
-                .collection("choices")
-                .insertOne({
-                    title: title,
-                    poolId: poolId
-                });
-            res.status(201).send({
+            return res.status(404).send("esse id questionário não existe");
+
+        if (isThereChoice)
+            return res.status(409).send("essa pergunta já existe");
+
+        let hasPoolExpired = dayjs(isTherePool.expireAt).isBefore(dayjs())
+        if (hasPoolExpired)
+            return res.status(403).send("essa pergunta já expirou");
+
+        await db
+            .collection("choices")
+            .insertOne({
                 title: title,
                 poolId: poolId
             });
-        }
+        res.status(201).send({
+            title: title,
+            poolId: poolId
+        });
 
     } catch (error) {
         res.status(500).send(error);
@@ -52,7 +52,7 @@ export async function getChoicesById(req, res) {
     try {
         const pool = await db.collection("pool").findOne({ _id: new ObjectId(index) });
         if (!pool)
-            res.status(404).send("enquete nao existe");
+            return res.status(404).send("enquete nao existe");
 
         db.collection("choices").find({ poolId: index }).toArray(function (err, results) {
             res.send(results);

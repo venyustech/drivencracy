@@ -10,9 +10,9 @@ const postPoolSchema = joi.object({
 
 export async function postPool(req, res) {
     const { title, expireAt } = req.body;
-    let expireAtChange = expireAt;
-    const validation = postPoolSchema.validate(req.body, { abortEarly: false });
+    let expireAtNotEmpty = expireAt;
 
+    const validation = postPoolSchema.validate(req.body, { abortEarly: false });
     if (validation.error) {
         const errors = validation.error.details.map((detail) => detail.message);
         return res.status(422).send(errors);
@@ -21,19 +21,18 @@ export async function postPool(req, res) {
     try {
         const pool = await db.collection("pool").findOne({ title });
         if (pool)
-            res.status(401).send("pergunta ja existente");
-        if (expireAt === "") {
-            expireAtChange = dayjs().add(30, 'day').format('YYYY-MM-DD HH:mm')
-        }
+            return res.status(401).send("pergunta ja existente");
+        if (expireAt === "")
+            expireAtNotEmpty = dayjs().add(30, 'day').format('YYYY-MM-DD HH:mm')
         await db
             .collection("pool")
             .insertOne({
                 title: title,
-                expireAt: expireAtChange
+                expireAt: expireAtNotEmpty
             });
         res.status(201).send({
             title: title,
-            expireAt: expireAtChange
+            expireAt: expireAtNotEmpty
         });
 
     } catch (error) {
@@ -42,7 +41,6 @@ export async function postPool(req, res) {
 }
 
 export async function getPool(req, res) {
-
     try {
         db.collection("pool").find({}).toArray(function (err, results) {
             res.send(results);
