@@ -6,6 +6,10 @@ import router from "./routes/index.js";
 
 const server = express();
 
+server.get('/health', (req, res) => {
+    res.send('OKAY');
+});
+
 server.use(json());
 server.use(cors());
 
